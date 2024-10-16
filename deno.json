@@ -5,10 +5,11 @@
     "build:all": "bash build.sh all"
   },
   "imports": {
-    "@std/path": "jsr:@std/path@1",
+    "@crayon/color-support": "jsr:@crayon/color-support@^2.1.0",
     "@std/fs": "jsr:@std/fs@1",
+    "@std/path": "jsr:@std/path@1",
     "@unthread-io/node": "npm:@unthread-io/node@~0.0.13",
-    "esbuild": "https://deno.land/x/esbuild@v0.24.0/mod.js",
-    "commander": "npm:commander@~12.1.0"
+    "commander": "npm:commander@~12.1.0",
+    "esbuild": "https://deno.land/x/esbuild@v0.24.0/mod.js"
   }
 }

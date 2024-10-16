@@ -1,6 +1,8 @@
 {
   "version": "4",
   "specifiers": {
+    "jsr:@beast/compat@~0.1.2": "0.1.2",
+    "jsr:@crayon/color-support@^2.1.0": "2.1.0",
     "jsr:@std/assert@*": "1.0.6",
     "jsr:@std/fs@1": "1.0.4",
     "jsr:@std/internal@^1.0.4": "1.0.4",
@@ -12,6 +14,15 @@
     "npm:commander@12.1": "12.1.0"
   },
   "jsr": {
+    "@beast/compat@0.1.2": {
+      "integrity": "f7837b100e3f4518e114f823570a1a1a2e49efaa7ed41de12eb5e079749f573f"
+    },
+    "@crayon/color-support@2.1.0": {
+      "integrity": "7901b177733e10526b78c2ca4f784550d6f7a38b992913f23ebcfc26ffee1398",
+      "dependencies": [
+        "jsr:@beast/compat"
+      ]
+    },
     "@std/assert@1.0.6": {
       "integrity": "1904c05806a25d94fe791d6d883b685c9e2dcd60e4f9fc30f4fc5cf010c72207",
       "dependencies": [
@@ -59,6 +70,7 @@
   },
   "workspace": {
     "dependencies": [
+      "jsr:@crayon/color-support@^2.1.0",
       "jsr:@std/fs@1",
       "jsr:@std/path@1",
       "npm:@unthread-io/node@~0.0.13",
