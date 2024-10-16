@@ -55,7 +55,7 @@ function createFunctionsProgram() {
 
   functionsProgram
     .command("deploy <entrypoint>")
-    .description("Deploy a new version of the automation functions")
+    .description("Deploy a new version of the automation functions - This will overwrite any existing draft you have.")
     .action(async (pathToFile) => {
       // Retrieve global options (API key) from the parent
       const globalOptions = functionsProgram.parent?.parent?.opts();
@@ -100,7 +100,6 @@ program.name("unthread");
 
 // Add global --api-key option
 program
-  .option("-k, --api-key <apikey>", "Unthread API key to authenticate requests")
   .option("-b, --base-url <baseUrl>", "Unthread API base URL");
 
 addHelpCommand(program, true);
