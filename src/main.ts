@@ -32,7 +32,9 @@ async function createColoredAsciiArt() {
 
   const canHaveColor = isTty && colors > 1;
 
-  return `${canHaveColor ? orangeColor : ""}${asciiArt}${canHaveColor ? reset : ""}`;
+  return `${canHaveColor ? orangeColor : ""}${asciiArt}${
+    canHaveColor ? reset : ""
+  }`;
 }
 
 function addHelpCommand(
@@ -60,7 +62,9 @@ function createFunctionsProgram() {
 
   functionsProgram
     .command("deploy <entrypoint>")
-    .description("Deploy a new version of the automation functions - This will overwrite any existing draft you have.")
+    .description(
+      "Deploy a new version of the automation functions - This will overwrite any existing draft you have.",
+    )
     .action(async (pathToFile) => {
       // Retrieve global options (API key) from the parent
       const globalOptions = functionsProgram.parent?.parent?.opts();
