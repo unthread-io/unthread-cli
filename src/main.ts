@@ -1,4 +1,5 @@
 import * as commander from "commander";
+import { getColorSupport } from "@crayon/color-support";
 // import { resolve, dirname, fromFileUrl } from '@std/path';
 
 import { deployAutomationFunctions } from "./automations/functions.ts";
@@ -11,7 +12,7 @@ import denoJson from "../deno.json" with { type: "json" };
 // const version = packageJson.version;
 
 // Function to create colored ASCII art
-function createColoredAsciiArt() {
+async function createColoredAsciiArt() {
   const asciiArt = `
  _   _       _   _                        _ _____  _     _____
 | | | |     | | | |                      | /  __ \\| |   |_   _|
@@ -25,9 +26,15 @@ function createColoredAsciiArt() {
 
   const orangeColor = "\x1b[38;5;208m"; // Orange color
   const reset = "\x1b[0m";
-  const isTty = Deno.stdout.isTerminal();
 
-  return `${isTty ? orangeColor : ""}${asciiArt}${isTty ? reset : ""}`;
+  const isTty = Deno.stdout.isTerminal();
+  const colors = await getColorSupport();
+
+  const canHaveColor = isTty && colors > 1;
+
+  return `${canHaveColor ? orangeColor : ""}${asciiArt}${
+    canHaveColor ? reset : ""
+  }`;
 }
 
 function addHelpCommand(
@@ -36,9 +43,9 @@ function addHelpCommand(
 ) {
   program.command("help", { isDefault: true })
     .description("Display help information")
-    .action(() => {
+    .action(async () => {
       if (includeAsciiArt) {
-        console.log(createColoredAsciiArt());
+        console.log(await createColoredAsciiArt());
       }
 
       program.outputHelp();
@@ -55,7 +62,9 @@ function createFunctionsProgram() {
 
   functionsProgram
     .command("deploy <entrypoint>")
-    .description("Deploy a new version of the automation functions - This will overwrite any existing draft you have.")
+    .description(
+      "Deploy a new version of the automation functions - This will overwrite any existing draft you have.",
+    )
     .action(async (pathToFile) => {
       // Retrieve global options (API key) from the parent
       const globalOptions = functionsProgram.parent?.parent?.opts();
