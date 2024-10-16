@@ -1,23 +1,25 @@
 import { UnthreadClient, type UnthreadClientOptions } from "@unthread-io/node";
-import fs from "node:fs";
-import esbuild from "esbuild";
-import process from "node:process";
+import { exists } from "@std/fs";
+import * as esbuild from "esbuild";
 
-export async function deployAutomationFunctions(pathToFile: string, options: UnthreadClientOptions): Promise<any> {
+export async function deployAutomationFunctions(
+  pathToFile: string,
+  options: UnthreadClientOptions,
+): Promise<any> {
   // check if file or directory exists
-  const fileExists = fs.existsSync(pathToFile);
+  const fileExists = await exists(pathToFile);
 
   if (!fileExists) {
     console.error(`File "${pathToFile}" does not exist`);
-    process.exit(1);
+    Deno.exit(1);
   }
 
   // check if file is a directory
-  const isDirectory = fs.statSync(pathToFile).isDirectory();
+  const fileInfo = await Deno.stat(pathToFile);
 
-  if (isDirectory) {
+  if (fileInfo.isDirectory) {
     console.error(`File "${pathToFile}" is a directory`);
-    process.exit(1);
+    Deno.exit(1);
   }
 
   // Use esbuild to bundle the code in the file or directory
@@ -27,38 +29,25 @@ export async function deployAutomationFunctions(pathToFile: string, options: Unt
     minify: false,
     format: "esm",
     packages: "external",
-    write: false
+    write: false,
   });
 
   const unthreadClient = new UnthreadClient(options);
 
-  // First create a new draft
-  const result1 = await unthreadClient.post('/automations/functions', {
-    code: bundle.outputFiles[0].text,
-  });
+  try {
+    const deployResult = await unthreadClient.automations.functions
+      .deployNewVersion({
+        code: bundle.outputFiles[0].text,
+      });
 
-  if (!result1.ok) {
-    if (result1.status === 401) {
-      console.error(`Unauthorized: Make sure your API key is valid`);
-      process.exit(1);
-    }
+    console.log(
+      `Deployed automation functions version ${deployResult.version}`,
+    );
 
-    const body = await result1.text();
+    Deno.exit(0);
+  } catch (error) {
+    console.error(`Failed to deploy automation functions: ${error}`);
 
-    console.error(`Failed to deploy automation functions: ${body}`);
-    process.exit(1);
+    Deno.exit(1);
   }
-
-  const data1 = await result1.json();
-  const newVersion = data1.version;
-
-  // Activate the new version
-  const result2 = await unthreadClient.post(`/automations/functions/${newVersion}/activate`);
-
-  if (!result2.ok) {
-    console.error(`Failed to activate automation functions version ${newVersion}`);
-    process.exit(1);
-  }
-
-  console.log(`Deployed automation functions version ${newVersion}`);
 }

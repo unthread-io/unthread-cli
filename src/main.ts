@@ -1,15 +1,14 @@
-#!/usr/bin/env node
+import * as commander from "commander";
+// import { resolve, dirname, fromFileUrl } from '@std/path';
 
-import * as commander from 'commander';
-import fs from 'node:fs';
-import path from 'node:path';
-import process from 'node:process';
+import { deployAutomationFunctions } from "./automations/functions.ts";
+import denoJson from "../deno.json" with { type: "json" };
 
-import { deployAutomationFunctions } from './automations/functions.ts';
+// const __dirname = dirname(fromFileUrl(import.meta.url));
+// const packageJsonPath = resolve(__dirname, '../deno.json');
+// const packageJson = JSON.parse(await Deno.readTextFile(packageJsonPath));
 
-const packageJsonPath = path.resolve(import.meta.dirname, '../deno.json');
-const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-const version = packageJson.version;
+// const version = packageJson.version;
 
 // Function to create colored ASCII art
 function createColoredAsciiArt() {
@@ -24,16 +23,19 @@ function createColoredAsciiArt() {
 
 `;
 
-  // TODO: Make colors optional
-  const orangeColor = '\x1b[38;5;208m';  // Orange color
-  const reset = '\x1b[0m';
+  const orangeColor = "\x1b[38;5;208m"; // Orange color
+  const reset = "\x1b[0m";
+  const isTty = Deno.stdout.isTerminal();
 
-  return orangeColor + asciiArt + reset;
+  return `${isTty ? orangeColor : ""}${asciiArt}${isTty ? reset : ""}`;
 }
 
-function addHelpCommand(program: commander.Command, includeAsciiArt: boolean = false) {
-  program.command('help', { isDefault: true })
-    .description('Display help information')
+function addHelpCommand(
+  program: commander.Command,
+  includeAsciiArt: boolean = false,
+) {
+  program.command("help", { isDefault: true })
+    .description("Display help information")
     .action(() => {
       if (includeAsciiArt) {
         console.log(createColoredAsciiArt());
@@ -46,29 +48,31 @@ function addHelpCommand(program: commander.Command, includeAsciiArt: boolean = f
 function createFunctionsProgram() {
   const functionsProgram = new commander.Command();
 
-  functionsProgram.name('functions');
-  functionsProgram.description('Automation functions commands');
-
+  functionsProgram.name("functions");
+  functionsProgram.description("Automation functions commands");
 
   addHelpCommand(functionsProgram);
 
   functionsProgram
-    .command('deploy <entrypoint>')
-    .description('Deploy a new version of the automation functions')
+    .command("deploy <entrypoint>")
+    .description("Deploy a new version of the automation functions")
     .action(async (pathToFile) => {
       // Retrieve global options (API key) from the parent
-      const globalOptions = functionsProgram.parent?.parent?.opts()
-      const apiKey = process.env.UNTHREAD_API_KEY;
-      const baseUrl = globalOptions?.baseUrl ?? process.env.UNTHREAD_API_BASE_URL;
+      const globalOptions = functionsProgram.parent?.parent?.opts();
+      const apiKey = Deno.env.get("UNTHREAD_API_KEY");
+      const baseUrl = globalOptions?.baseUrl ??
+        Deno.env.get("UNTHREAD_API_BASE_URL");
 
       if (!apiKey) {
-        console.error('Missing Unthread API key. Please set the UNTHREAD_API_KEY environment variable.');
-        process.exit(1);
+        console.error(
+          "Missing Unthread API key. Please set the UNTHREAD_API_KEY environment variable.",
+        );
+        Deno.exit(1);
       }
 
       await deployAutomationFunctions(pathToFile, {
         apiKey,
-        baseUrl
+        baseUrl,
       });
     });
 
@@ -78,8 +82,8 @@ function createFunctionsProgram() {
 function createAutomationsProgram() {
   const automationsProgram = new commander.Command();
 
-  automationsProgram.name('automations');
-  automationsProgram.description('Automation commands');
+  automationsProgram.name("automations");
+  automationsProgram.description("Automation commands");
 
   addHelpCommand(automationsProgram);
 
@@ -92,24 +96,24 @@ function createAutomationsProgram() {
 const program = new commander.Command();
 
 // Set the name of the program to 'unthread'
-program.name('unthread');
+program.name("unthread");
 
 // Add global --api-key option
 program
-  .option('-k, --api-key <apikey>', 'Unthread API key to authenticate requests')
-  .option('-b, --base-url <baseUrl>', 'Unthread API base URL');
+  .option("-k, --api-key <apikey>", "Unthread API key to authenticate requests")
+  .option("-b, --base-url <baseUrl>", "Unthread API base URL");
 
 addHelpCommand(program, true);
 
 program
-  .command('version')
-  .description('Display the version of the Unthread CLI')
+  .command("version")
+  .description("Display the version of the Unthread CLI")
   .action(() => {
-    console.log(`Unthread CLI version: ${version}`);
+    console.log(`Unthread CLI version: v${denoJson.version}`);
   });
 
 // Add automations command group
 program
   .addCommand(createAutomationsProgram());
 
-program.parse(process.argv);
+program.parse();
